@@ -10,6 +10,7 @@ import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
 import google.generativeai as genai
+import google.auth
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from zoneinfo import ZoneInfo
@@ -85,11 +86,13 @@ def _load_service_account() -> service_account.Credentials:
         payload = _access_secret_payload(secret_name)
         info = json.loads(payload)
         return service_account.Credentials.from_service_account_info(info, scopes=scopes)
-    raise ValueError("Missing GOOGLE_SERVICE_ACCOUNT_FILE or GOOGLE_SERVICE_ACCOUNT_SECRET")
+    return None
 
 
 def _get_services():
     creds = _load_service_account()
+    if creds is None:
+        creds, _project = google.auth.default(scopes=[CALENDAR_SCOPE, SHEETS_SCOPE])
     calendar = build("calendar", "v3", credentials=creds, cache_discovery=False)
     sheets = build("sheets", "v4", credentials=creds, cache_discovery=False)
     return calendar, sheets
