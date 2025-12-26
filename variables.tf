@@ -84,6 +84,79 @@ variable "function_env" {
   sensitive   = true
 }
 
+variable "line_channel_access_token" {
+  type        = string
+  description = "LINE channel access token"
+  default     = ""
+  sensitive   = true
+}
+
+variable "line_channel_secret" {
+  type        = string
+  description = "LINE channel secret"
+  default     = ""
+  sensitive   = true
+}
+
+variable "gemini_api_key" {
+  type        = string
+  description = "Gemini API key"
+  default     = ""
+  sensitive   = true
+}
+
+variable "calendar_id" {
+  type        = string
+  description = "Google Calendar ID"
+  default     = ""
+  sensitive   = true
+}
+
+variable "spreadsheet_id" {
+  type        = string
+  description = "Google Spreadsheet ID"
+  default     = ""
+  sensitive   = true
+}
+
+variable "google_service_account_file" {
+  type        = string
+  description = "Path to service account JSON inside the container"
+  default     = ""
+  sensitive   = true
+}
+
+variable "google_service_account_secret" {
+  type        = string
+  description = "Secret Manager resource name for service account JSON"
+  default     = ""
+  sensitive   = true
+}
+
+variable "timezone" {
+  type        = string
+  description = "IANA timezone for scheduling (optional)"
+  default     = ""
+}
+
+variable "work_start" {
+  type        = string
+  description = "Workday start time (HH:MM)"
+  default     = ""
+}
+
+variable "work_end" {
+  type        = string
+  description = "Workday end time (HH:MM)"
+  default     = ""
+}
+
+variable "default_duration_minutes" {
+  type        = string
+  description = "Default booking duration in minutes"
+  default     = ""
+}
+
 variable "container_image_uri" {
   type        = string
   description = "Container image URI built by CI (optional)"
@@ -158,7 +231,7 @@ variable "enable_apis" {
     "secretmanager.googleapis.com",
     "serviceusage.googleapis.com",
     "sheets.googleapis.com",
-    "calendar-json.googleapis.com",
+    "calendar.googleapis.com",
     "storage.googleapis.com",
     "sts.googleapis.com",
   ]

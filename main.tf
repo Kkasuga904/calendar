@@ -26,18 +26,36 @@ provider "google-beta" {
   region  = var.region
 }
 
-resource "google_project_service" "apis" {
-  for_each           = toset(var.enable_apis)
-  service            = each.value
-  disable_on_destroy = false
+locals {
+  base_env = {
+    LINE_CHANNEL_ACCESS_TOKEN     = var.line_channel_access_token
+    LINE_CHANNEL_SECRET           = var.line_channel_secret
+    GEMINI_API_KEY                = var.gemini_api_key
+    CALENDAR_ID                   = var.calendar_id
+    SPREADSHEET_ID                = var.spreadsheet_id
+    GOOGLE_SERVICE_ACCOUNT_FILE   = var.google_service_account_file
+    GOOGLE_SERVICE_ACCOUNT_SECRET = var.google_service_account_secret
+    TIMEZONE                      = var.timezone
+    WORK_START                    = var.work_start
+    WORK_END                      = var.work_end
+    DEFAULT_DURATION_MINUTES      = var.default_duration_minutes
+  }
+
+  secret_env = { for key, value in local.base_env : key => value if value != "" }
 }
+
+#resource "google_project_service" "apis" {
+#  for_each           = toset(var.enable_apis)
+#  service            = each.value
+#  disable_on_destroy = false
+#}
 
 resource "google_artifact_registry_repository" "functions" {
   location      = var.region
   repository_id = var.artifact_repo_name
   format        = "DOCKER"
   description   = "Container images for Cloud Functions Gen2"
-  depends_on    = [google_project_service.apis]
+#  depends_on    = [google_project_service.apis]
 }
 
 resource "google_storage_bucket" "source" {
@@ -45,7 +63,7 @@ resource "google_storage_bucket" "source" {
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = var.source_bucket_force_destroy
-  depends_on                  = [google_project_service.apis]
+ # depends_on                  = [google_project_service.apis]
 }
 
 data "archive_file" "source" {
@@ -69,15 +87,15 @@ resource "google_service_account" "function" {
 
 resource "google_iam_workload_identity_pool" "github" {
   provider                  = google-beta
-  location                  = "global"
+ # location                  = "global"
   workload_identity_pool_id = var.github_wif_pool_id
   display_name              = "GitHub Actions"
-  depends_on                = [google_project_service.apis]
+ # depends_on                = [google_project_service.apis]
 }
 
 resource "google_iam_workload_identity_pool_provider" "github" {
   provider                           = google-beta
-  location                           = "global"
+  #location                           = "global"
   workload_identity_pool_id          = google_iam_workload_identity_pool.github.workload_identity_pool_id
   workload_identity_pool_provider_id = var.github_wif_provider_id
   display_name                       = "GitHub Actions Provider"
@@ -117,7 +135,7 @@ resource "google_cloudfunctions2_function" "bot" {
   location = var.region
 
   build_config {
-    runtime         = "custom"
+    runtime         = "python312"
     entry_point     = "main"
     docker_repository = google_artifact_registry_repository.functions.id
     source {
@@ -137,12 +155,13 @@ resource "google_cloudfunctions2_function" "bot" {
     ingress_settings               = "ALLOW_ALL"
     service_account_email          = google_service_account.function.email
     environment_variables = merge(
+      local.secret_env,
       var.function_env,
       var.container_image_uri == "" ? {} : { CONTAINER_IMAGE_URI = var.container_image_uri }
     )
   }
 
-  depends_on = [google_project_service.apis]
+#  depends_on = [google_project_service.apis]
 }
 
 resource "google_cloudfunctions2_function_iam_member" "invoker" {

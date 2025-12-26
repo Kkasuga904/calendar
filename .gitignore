@@ -1,0 +1,16 @@
+.env
+.env.*
+*.tfvars
+*.tfvars.json
+terraform.tfstate
+terraform.tfstate.*
+.terraform/
+function-source.zip
+
+# Common secret file patterns
+*credentials*.json
+*service-account*.json
+*.pem
+*.key
+API.txt
+perfect-tape-482408-j0-e216d49dbabc.json
